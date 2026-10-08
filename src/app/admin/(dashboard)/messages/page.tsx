@@ -1,0 +1,6 @@
+import { redirect } from 'next/navigation';
+import { requireUser } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { HandleMessageButton } from '@/components/admin-forms';
+import { dateLabel } from '@/lib/utils';
+export default async function Messages(){if((await requireUser()).role==='author')redirect('/admin');const items=db.prepare('SELECT * FROM messages ORDER BY handled,created_at DESC').all() as {id:string;name:string;email:string;phone:string;message:string;created_at:string;handled:number}[];return <><div className="admin-title"><div><h1>Hộp thư liên hệ</h1><p>Lời nhắn từ phụ huynh và học sinh. Hệ thống lưu yêu cầu, không tự gửi email.</p></div></div>{items.length?items.map(m=><section className="admin-card" key={m.id}><div className="card-heading"><h2>{m.name}</h2><span className={'status '+(m.handled?'published':'pending')}>{m.handled?'Đã xử lý':'Chưa xử lý'}</span></div><p><a href={'mailto:'+m.email}>{m.email}</a> · {m.phone||'Không có điện thoại'} · {dateLabel(m.created_at)}</p><p className="message-text">{m.message}</p>{!m.handled&&<HandleMessageButton id={m.id}/>}</section>):<div className="admin-card empty-state"><h2>Chưa có lời nhắn</h2><p>Các yêu cầu từ biểu mẫu Liên hệ sẽ xuất hiện tại đây.</p></div>}</>;}

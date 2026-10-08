@@ -1,0 +1,5 @@
+'use client';
+import { useActionState, useState } from 'react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { login } from '@/lib/actions';
+export function LoginForm(){const [state,action,pending]=useActionState(login,{error:''});const [show,setShow]=useState(false);return <form action={action} className="login-form"><label>Email<input name="email" type="email" autoComplete="username" required placeholder="Email được cấp"/></label><label>Mật khẩu<div className="password-input"><input name="password" type={show?'text':'password'} autoComplete="current-password" maxLength={256} required placeholder="Nhập mật khẩu"/><button type="button" aria-label={show?'Ẩn mật khẩu':'Hiện mật khẩu'} onClick={()=>setShow(!show)}>{show?<EyeOff size={18}/>:<Eye size={18}/>}</button></div></label>{state.error&&<p className="error-message" role="alert">{state.error}</p>}<button className="button" disabled={pending}>{pending?'Đang xác thực…':'Đăng nhập'}<ArrowRight size={18}/></button><p className="muted">Tài khoản được cấp bởi quản trị viên nhà trường.</p></form>;}

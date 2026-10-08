@@ -1,0 +1,6 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { db, getPost } from '@/lib/db';
+import { requireUser } from '@/lib/auth';
+import type { Post } from '@/lib/types';
+export default async function History({params}:{params:Promise<{id:string}>}){const {id}=await params;const user=await requireUser();const post=getPost(id);if(!post||(user.role==='author'&&post.author_id!==user.id))notFound();const history=db.prepare('SELECT r.*,u.name FROM revisions r LEFT JOIN users u ON u.id=r.actor WHERE post_id=? ORDER BY r.id DESC').all(id) as {id:number;snapshot:string;created_at:string;name:string}[];return <><Link className="text-link" href={'/admin/posts/'+id}>← Quay lại bài viết</Link><div className="admin-title"><div><h1>Lịch sử chỉnh sửa</h1><p>{post.title}</p></div></div>{history.length?history.map(h=>{const snapshot=JSON.parse(h.snapshot) as Post;return <details className="admin-card" key={h.id}><summary>Phiên bản {snapshot.version} · {h.name} · {h.created_at} UTC</summary><h2>{snapshot.title}</h2><p>{snapshot.excerpt}</p><div className="prose" dangerouslySetInnerHTML={{__html:snapshot.content}}/></details>;}):<p className="admin-card">Chưa có phiên bản trước. Lịch sử được lưu mỗi khi bài được chỉnh sửa hoặc đổi trạng thái.</p>}</>;}

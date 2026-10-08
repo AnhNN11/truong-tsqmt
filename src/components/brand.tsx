@@ -1,0 +1,1 @@
+export function Emblem({small=false}:{small?:boolean}) {return <span className={`emblem ${small?'small':''}`}><img src="/images/school-logo.jpg" alt="Logo Phân hiệu 1 Trường Thiếu sinh quân miền Trung"/></span>;}
