@@ -6,7 +6,14 @@ import { randomBytes, scryptSync } from 'node:crypto';
 import type { Category, Post, Settings, User, Media, HeroSlide } from './types';
 import { schoolMedia } from './school-media';
 
-const databasePath = resolve(process.env.DATABASE_PATH || '.data/site.db');
+// Vercel's deployed filesystem is read-only except for /tmp. Keep local
+// development on .data, while allowing the public site to boot in a
+// serverless function. A durable production database can be supplied later
+// by replacing this adapter with a hosted SQLite/Postgres provider.
+const configuredDatabasePath = process.env.DATABASE_PATH;
+const databasePath = process.env.VERCEL
+ ? (configuredDatabasePath?.startsWith('/tmp/') ? configuredDatabasePath : '/tmp/tsqmt/site.db')
+ : resolve(configuredDatabasePath || '.data/site.db');
 mkdirSync(dirname(databasePath), { recursive: true });
 const globalDb = globalThis as unknown as { tsqDb?: DatabaseSync };
 export const db = globalDb.tsqDb ?? new DatabaseSync(databasePath);

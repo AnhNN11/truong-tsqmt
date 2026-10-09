@@ -86,7 +86,7 @@ export async function uploadMedia(form:FormData) {
  else if(bytes.toString('ascii',4,8)==='ftyp'){ext='mp4';mime='video/mp4';}
  else if(bytes.subarray(0,4).equals(Buffer.from([0x1a,0x45,0xdf,0xa3]))){ext='webm';mime='video/webm';}
  else return {error:'Chỉ nhận PNG, JPEG, WebP, MP4, WebM và PDF hợp lệ.'};
- const id=randomUUID();const filename=id+'.'+ext;const dir=resolve('.data/uploads');await mkdir(dir,{recursive:true});await writeFile(resolve(dir,filename),bytes);const url='/media/'+filename;
+ const id=randomUUID();const filename=id+'.'+ext;const dir=process.env.VERCEL?'/tmp/tsqmt/uploads':resolve('.data/uploads');await mkdir(dir,{recursive:true});await writeFile(resolve(dir,filename),bytes);const url='/media/'+filename;
  db.prepare('INSERT INTO media VALUES(?,?,?,?,?,?)').run(id,file.name.slice(0,250),url,mime,file.size,new Date().toISOString());audit(user.id,'Tải tệp',id);revalidatePath('/admin/media');return {success:true,url,mime};
 }
 export async function sendContact(_prev:{error?:string;success?:boolean},form:FormData):Promise<{error?:string;success?:boolean}> {
