@@ -10,16 +10,33 @@ import { z } from 'zod';
 import { db, audit, getPost, hashPassword, getSettings } from './db';
 import { allowAttempt, currentUser, digest, requireAdmin, requireUser, startSession, verifyPassword } from './auth';
 import { slugify } from './utils';
+import { sendLoginOtp } from './mailer';
 import type { User } from './types';
 const str=(f:FormData,key:string)=>String(f.get(key)||'');
 const safeUrl=z.string().max(1000).refine(v=>!v||/^https:\/\//.test(v)||/^\/(images|media)\/[a-zA-Z0-9._-]+$/.test(v),'Liên kết cần là HTTPS hoặc tệp đã tải lên.');
 const refresh=()=>revalidatePath('/','layout');
-export async function login(_prev:{error:string},form:FormData) {
+export async function login(_prev:{error:string;step?:'otp';challengeId?:string;email?:string},form:FormData) {
+ const challengeId=str(form,'challengeId');const otp=str(form,'otp').replace(/\s/g,'');
+ if(challengeId) {
+  const challenge=db.prepare('SELECT c.*,u.email FROM login_otp_challenges c JOIN users u ON u.id=c.user_id WHERE c.id=?').get(challengeId) as {id:string;user_id:string;email:string;code_hash:string;expires:number;attempts:number;consumed:number}|undefined;
+  if(form.get('resend')==='1'&&challenge&&!challenge.consumed&&challenge.expires>Date.now()) {
+   if(!allowAttempt('otp-resend:'+challengeId,3,10*60*1000))return {error:'Bạn đã yêu cầu quá nhiều mã. Vui lòng thử lại sau.' ,step:'otp' as const,challengeId,email:challenge.email};
+   const code=String(Math.floor(100000+Math.random()*900000));const expires=Date.now()+Number(process.env.OTP_EXPIRES_MINUTES||10)*60*1000;
+   try{await sendLoginOtp(challenge.email,code);db.prepare('UPDATE login_otp_challenges SET code_hash=?,expires=?,attempts=0 WHERE id=?').run(digest(code),expires,challengeId);return {error:'Đã gửi mã mới.',step:'otp' as const,challengeId,email:challenge.email};}catch{return {error:'Không thể gửi email OTP. Kiểm tra cấu hình SMTP trên Vercel.',step:'otp' as const,challengeId,email:challenge.email};}
+  }
+  if(!challenge||challenge.consumed||challenge.expires<=Date.now())return {error:'Mã OTP đã hết hạn. Hãy đăng nhập lại.'};
+  if(!/^\d{6}$/.test(otp))return {error:'Nhập mã OTP gồm 6 chữ số.',step:'otp' as const,challengeId,email:challenge.email};
+  if(!allowAttempt('otp:'+challengeId,5,10*60*1000)||challenge.attempts>=5)return {error:'Mã OTP không còn hiệu lực. Hãy đăng nhập lại.',step:'otp' as const,challengeId,email:challenge.email};
+  if(digest(otp)!==challenge.code_hash){db.prepare('UPDATE login_otp_challenges SET attempts=attempts+1 WHERE id=?').run(challengeId);return {error:'Mã OTP không đúng.',step:'otp' as const,challengeId,email:challenge.email};}
+  db.prepare('UPDATE login_otp_challenges SET consumed=1 WHERE id=?').run(challengeId);db.prepare('DELETE FROM rate_limits WHERE key LIKE ?').run('otp%:'+challengeId);await startSession(challenge.user_id);redirect('/admin');
+ }
  const email=str(form,'email').trim().toLowerCase();const password=str(form,'password');
  if(email.length>254||password.length>256||!allowAttempt('login:'+email,8,15*60*1000))return {error:'Quá nhiều lần thử. Vui lòng thử lại sau 15 phút.'};
  const user=db.prepare('SELECT * FROM users WHERE email=?').get(email) as (User&{password:string})|undefined;
  if(!user||!verifyPassword(password,user.password))return {error:'Email hoặc mật khẩu không đúng.'};
- db.prepare('DELETE FROM rate_limits WHERE key=?').run('login:'+email);await startSession(user.id);redirect('/admin');
+ db.prepare('DELETE FROM rate_limits WHERE key=?').run('login:'+email);db.prepare('DELETE FROM login_otp_challenges WHERE user_id=? OR expires<?').run(user.id,Date.now());
+ const code=String(Math.floor(100000+Math.random()*900000));const id=randomUUID();const expires=Date.now()+Number(process.env.OTP_EXPIRES_MINUTES||10)*60*1000;
+ try{db.prepare('INSERT INTO login_otp_challenges VALUES(?,?,?,?,?,?,0)').run(id,user.id,digest(code),expires,0,Date.now());await sendLoginOtp(user.email,code);return {error:'',step:'otp' as const,challengeId:id,email:user.email};}catch{db.prepare('DELETE FROM login_otp_challenges WHERE id=?').run(id);return {error:'Không thể gửi email OTP. Kiểm tra SMTP_HOST, SMTP_USER và SMTP_PASSWORD.',};}
 }
 export async function logout() { const jar=await cookies(); const token=jar.get('tsq_session')?.value;if(token)db.prepare('DELETE FROM sessions WHERE token=?').run(digest(token));jar.delete('tsq_session');redirect('/admin/login'); }
 export async function savePost(form:FormData) {

@@ -34,3 +34,18 @@ npm run build
 ```
 
 `build` có cảnh báo tracing SQLite vì cơ sở dữ liệu được chọn bằng biến môi trường; đây là cảnh báo đóng gói, không phải lỗi build.
+
+## Deploy trên Vercel
+
+Vercel dùng filesystem tạm thời cho Serverless Function. Website vẫn có các bài tin mẫu ngay sau khi deploy, nhưng nội dung tạo từ `/admin` sẽ không tồn tại lâu dài nếu chỉ dùng SQLite ở `/tmp`.
+
+Trong Project Settings → Environment Variables, thêm tối thiểu:
+
+```env
+ADMIN_EMAIL=dia-chi-email-quan-tri
+ADMIN_PASSWORD=mat-khau-it-nhat-14-ky-tu
+COOKIE_SECURE=true
+NEXT_PUBLIC_SITE_URL=https://ten-mien-cua-ban.vn
+```
+
+Để CMS lưu bài viết bền vững, cần thay adapter SQLite trong `src/lib/db.ts` bằng một cơ sở dữ liệu có lưu trữ lâu dài như Neon Postgres, Supabase hoặc Turso. Khi chưa nối cơ sở dữ liệu ngoài, hãy xem bản deploy như bản giới thiệu có tin mẫu; không nên dùng `/tmp` làm kho dữ liệu sản xuất.

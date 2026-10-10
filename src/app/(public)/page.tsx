@@ -1,19 +1,95 @@
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, BookOpen, ShieldCheck, HeartHandshake, Bell, ChevronRight, Leaf, Compass, CalendarDays } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BookOpen, ShieldCheck, HeartHandshake, Compass } from 'lucide-react';
 import { getPosts, getSettings, getHeroSlides } from '@/lib/db';
+import { dateLabel } from '@/lib/utils';
 import { HeroCarousel } from '@/components/hero-carousel';
 import { SectionTitle, PostCard } from '@/components/public-ui';
-import { Gallery } from '@/components/gallery';
-import { dateLabel } from '@/lib/utils';
+import { ContactSection } from '@/components/contact-section';
+import { PressStrip } from '@/components/press-strip';
+import { SchoolLife } from '@/components/school-life';
+import { schoolMedia } from '@/lib/school-media';
+import { LandingArt } from '@/components/landing-art';
+
 export default function Home() {
- const s=getSettings();const posts=getPosts();const lead=posts[0];const notices=posts.filter(p=>p.category==='thong-bao');
- return <><HeroCarousel settings={s} slides={getHeroSlides()}/>
- <section className="news-section section"><div className="container"><SectionTitle eyebrow="NHỊP SỐNG NHÀ TRƯỜNG" title="Tin tức & sự kiện" href="/tin-tuc"/><div className="home-news-grid">{lead&&<PostCard post={lead} large/>}<div className="news-stack">{posts.slice(1,4).map(p=><article className="compact-post" key={p.id}><Link href={'/tin-tuc/'+p.slug}><img src={p.cover||'/images/campus.webp'} alt={p.title} loading="lazy"/></Link><div><span className="small-meta">{dateLabel(p.published_at||p.created_at)}</span><h3><Link href={'/tin-tuc/'+p.slug}>{p.title}</Link></h3><Link className="read-more" href={'/tin-tuc/'+p.slug}>Đọc tiếp <ArrowRight size={14}/></Link></div></article>)}</div></div></div></section> <section className="quicklinks container" aria-label="Truy cập nhanh">{[[Bell,'Tin tức mới','Câu chuyện từ nhà trường','/tin-tuc'],[BookOpen,'Giáo dục & rèn luyện','Vững tri thức, sáng tương lai','/giao-duc'],[Bell,'Thông báo mới','Thông tin dành cho phụ huynh','/tin-tuc?category=thong-bao'],[HeartHandshake,'Kết nối nhà trường','Đồng hành cùng các em','/lien-he']].map(([Icon,title,desc,href])=>{const I=Icon as typeof BookOpen;return <Link href={href as string} key={title as string}><I size={27} strokeWidth={1.5}/><div><strong>{title as string}</strong><span>{desc as string}</span></div><ArrowUpRight className="quick-arrow" size={17}/></Link>;})}</section>
- <section className="section container intro-section"><div className="intro-visual"><img src="/images/activity-formation.jpg" alt="Học viên Phân hiệu 1 trong giờ rèn luyện" loading="lazy"/></div><div className="intro-copy"><span className="eyebrow"><span/>VỀ NHÀ TRƯỜNG</span><h2>{s.introTitle}</h2><p>{s.introText}</p><div className="values"><div><BookOpen size={20}/><span>Vững nền tảng tri thức</span></div><div><ShieldCheck size={20}/><span>Rèn ý chí, luyện bản lĩnh</span></div><div><HeartHandshake size={20}/><span>Nuôi dưỡng lòng nhân ái</span></div><div><Compass size={20}/><span>Khơi dậy khát vọng</span></div></div><Link href="/gioi-thieu" className="text-link">Câu chuyện về nhà trường <ArrowUpRight size={18}/></Link></div></section>
+  const s = getSettings();
+  const posts = getPosts();
+  const lead = posts[0];
 
+  return <>
+    <HeroCarousel settings={s} slides={getHeroSlides()} />
 
- <section className="section container education-section"><SectionTitle eyebrow="GIÁO DỤC TOÀN DIỆN" title="Hành trang cho một tương lai vững vàng" href="/giao-duc" label="Tìm hiểu thêm"/><div className="pillar-grid">{[[BookOpen,'01','Bồi đắp tri thức','Khơi dậy niềm say mê học tập, khả năng tư duy và tinh thần tự học.'],[ShieldCheck,'02','Rèn luyện bản lĩnh','Trưởng thành từ nếp sống kỷ luật, ý chí bền bỉ và tinh thần trách nhiệm.'],[Leaf,'03','Phát triển toàn diện','Cân bằng thể chất, tâm hồn và kỹ năng sống trong một tập thể gắn kết.']].map(([Icon,n,title,desc])=>{const I=Icon as typeof BookOpen;return <Link className="pillar" href="/giao-duc" key={n as string}><div className="pillar-top"><I size={33} strokeWidth={1.4}/><span>{n as string}</span></div><h3>{title as string}</h3><p>{desc as string}</p><ArrowUpRight size={21}/></Link>;})}</div></section>
- <section id="hinh-anh" className="section container landing-gallery"><SectionTitle eyebrow="HOẠT ĐỘNG THỰC TẾ" title="Những ngày học tập và rèn luyện" href="/tin-tuc" label="Xem tin tức"/><Gallery items={[{url:'/images/activity-march.jpg',name:'Rèn luyện đội hình'},{url:'/images/activity-formation.jpg',name:'Sinh hoạt ngoài sân trường'},{url:'/images/activity-campus-briefing.jpg',name:'Sinh hoạt tập thể'},{url:'/images/activity-study.jpg',name:'Tự học trong phòng ở'},{url:'/images/activity-sewing-01.jpg',name:'Chuẩn bị quân trang'},{url:'/images/activity-uniforms.jpg',name:'Đồng phục học viên'}]}/></section>
- <section className="admissions-band"><div className="container"><div><span className="eyebrow light"><span/>KHOẢNH KHẮC TỪ PHÂN HIỆU 1</span><h2>Những hình ảnh thật.<br/><em>Những câu chuyện thật.</em></h2><p>Cùng nhìn lại các hoạt động, buổi học và dấu mốc đầu tiên của nhà trường.</p><a href="#hinh-anh" className="button gold-button">Xem hoạt động thực tế <ArrowUpRight size={19}/></a></div><div className="band-art"><img src="/images/activity-march.jpg" alt="Học viên Phân hiệu 1 trong hoạt động rèn luyện" loading="lazy"/></div></div></section>
- <section className="section container bottom-grid"><div><SectionTitle eyebrow="THÔNG TIN CẦN BIẾT" title="Thông báo & hướng dẫn" href="/tin-tuc?category=thong-bao"/><div className="notice-list">{notices.length?notices.map(p=><Link href={'/tin-tuc/'+p.slug} key={p.id}><CalendarDays size={25}/><div><span>{dateLabel(p.published_at||p.created_at)}</span><h3>{p.title}</h3></div><ChevronRight size={20}/></Link>):<p>Các thông báo mới sẽ được cập nhật tại đây.</p>}</div></div></section></>;
+    <section id="tin-tuc" className="news-section section" aria-label="Tin tức và sự kiện">
+      <LandingArt kind="drum-seal" className="news-section-art" />
+      <div className="container">
+        <SectionTitle eyebrow="NHỊP SỐNG NHÀ TRƯỜNG" title="Tin tức & sự kiện" href="/tin-tuc" />
+        <div className="home-news-grid">
+          {lead && <PostCard post={lead} large />}
+          <div className="news-stack">
+            {posts.slice(1, 4).map(post => <article className="compact-post" key={post.id}>
+              <Link href={`/tin-tuc/${post.slug}`}><img src={post.cover || '/images/campus.webp'} alt={post.title} loading="lazy" /></Link>
+              <div>
+                <span className="small-meta">{dateLabel(post.published_at || post.created_at)}</span>
+                <h3><Link href={`/tin-tuc/${post.slug}`}>{post.title}</Link></h3>
+                <Link className="read-more" href={`/tin-tuc/${post.slug}`}>Đọc tiếp <ArrowRight size={14} /></Link>
+              </div>
+            </article>)}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <PressStrip />
+
+    <section id="ve-nha-truong" className="section school-story-section" aria-labelledby="school-story-title">
+      <LandingArt kind="mountain-pines" className="school-story-section-art" />
+      <div className="container">
+        <div className="school-story-layout">
+          <aside className="school-story-side school-story-side-left">
+            <span className="eyebrow"><span />VỀ NHÀ TRƯỜNG</span>
+            <h2 id="school-story-title">{s.introTitle}</h2>
+            <p>{s.introText}</p>
+            <div className="school-story-values">
+              <div><BookOpen size={19} /><span>Vững nền tảng tri thức</span></div>
+              <div><ShieldCheck size={19} /><span>Rèn ý chí, luyện bản lĩnh</span></div>
+              <div><HeartHandshake size={19} /><span>Nuôi dưỡng lòng nhân ái</span></div>
+              <div><Compass size={19} /><span>Khơi dậy khát vọng</span></div>
+            </div>
+            <Link href="/gioi-thieu" className="text-link">Câu chuyện về nhà trường <ArrowUpRight size={18} /></Link>
+          </aside>
+
+          <div className="school-story-video">
+            <div className="intro-video-frame">
+              <video
+                className="school-story-video-player"
+                title="Video giới thiệu Phân hiệu 1 Trường Thiếu sinh quân miền Trung"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                poster="/images/school-ceremony.jpg"
+              >
+                <source src={schoolMedia.localVideo} type="video/mp4" />
+                Trình duyệt của bạn không hỗ trợ phát video.
+              </video>
+            </div>
+            <div className="intro-video-meta"><span>Video giới thiệu Phân hiệu 1</span><span className="intro-video-live">TỰ PHÁT · ÂM THANH TẮT</span></div>
+          </div>
+
+          <aside className="school-story-side school-story-side-right">
+            <LandingArt kind="academy-gate" className="school-story-gate-art" />
+            <div className="school-story-note">
+              <img className="school-story-note-logo" src="/images/school-logo.jpg" alt="" />
+              <span className="school-story-kicker">MỘT MÁI TRƯỜNG · NHIỀU ĐIỂM TỰA</span>
+              <p>Học viên được lớn lên trong một tập thể có kỷ cương, tình thương và những người luôn đồng hành.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <SchoolLife />
+
+    <ContactSection settings={s} />
+  </>;
 }

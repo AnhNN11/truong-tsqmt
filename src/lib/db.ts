@@ -30,10 +30,17 @@ CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,actor TEXT,action TEXT,e
 CREATE TABLE IF NOT EXISTS revisions(id INTEGER PRIMARY KEY,post_id TEXT NOT NULL,snapshot TEXT NOT NULL,actor TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS messages(id TEXT PRIMARY KEY,name TEXT NOT NULL,email TEXT NOT NULL,phone TEXT NOT NULL,message TEXT NOT NULL,created_at TEXT NOT NULL,handled INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS rate_limits(key TEXT PRIMARY KEY,count INTEGER NOT NULL,reset_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS login_otp_challenges(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,code_hash TEXT NOT NULL,expires INTEGER NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,created_at INTEGER NOT NULL,consumed INTEGER NOT NULL DEFAULT 0);
 CREATE INDEX IF NOT EXISTS posts_status_date ON posts(status,published_at);
 `);
 export function hashPassword(value: string) { const salt=randomBytes(16).toString('hex'); return salt+':'+scryptSync(value,salt,64).toString('hex'); }
-if (!db.prepare('SELECT id FROM users LIMIT 1').get() && process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD.length >= 14) {
+// Keep bundled starter stories visible on serverless deployments before an
+// admin account has been configured. This account cannot be used to log in.
+const seedAuthorId = db.prepare('SELECT id FROM users WHERE id=?').get('admin') ? 'admin' : 'system';
+if (seedAuthorId === 'system' && !db.prepare('SELECT id FROM users WHERE id=?').get('system')) {
+ db.prepare('INSERT INTO users VALUES (?,?,?,?,?)').run('system','Nội dung hệ thống','system@tsqmt.local',hashPassword(randomBytes(32).toString('hex')),'editor');
+}
+if (!db.prepare('SELECT id FROM users WHERE id=?').get('admin') && process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD.length >= 14) {
  db.prepare('INSERT OR IGNORE INTO users VALUES (?,?,?,?,?)').run('admin','Quản trị viên',process.env.ADMIN_EMAIL||'admin@tsq.local',hashPassword(process.env.ADMIN_PASSWORD),'admin');
 }
 export const defaults: Settings = {
@@ -55,7 +62,7 @@ if (!db.prepare('SELECT id FROM hero_slides LIMIT 1').get()) {
 if (!db.prepare('SELECT id FROM categories LIMIT 1').get()) {
  for (const [id,name] of [['hoat-dong','Hoạt động nhà trường'],['giao-duc','Giáo dục & rèn luyện'],['tuyen-sinh','Tuyển sinh'],['thong-bao','Thông báo']]) db.prepare('INSERT OR IGNORE INTO categories VALUES(?,?,?)').run(id,name,id);
 }
-if (!db.prepare('SELECT id FROM posts LIMIT 1').get() && db.prepare('SELECT id FROM users WHERE id=?').get('admin')) {
+if (!db.prepare('SELECT id FROM posts LIMIT 1').get() && db.prepare('SELECT id FROM users WHERE id=?').get(seedAuthorId)) {
  const source='https://baogialai.com.vn/khai-giang-nam-hoc-2026-2027-phan-hieu-1-truong-thieu-sinh-quan-mien-trung-post600756.html';
  const rows=[
   ['khoi-dau-hanh-trinh-moi','Khởi đầu hành trình mới dưới mái trường Thiếu sinh quân','hoat-dong','Ngày 01/10/2026, Phân hiệu 1 tổ chức lễ công bố quyết định thành lập và khai giảng năm học 2026–2027 tại Gia Lai.','/images/school-ceremony.jpg',0,source],
@@ -68,7 +75,7 @@ if (!db.prepare('SELECT id FROM posts LIMIT 1').get() && db.prepare('SELECT id F
  for (const [i,r] of rows.entries()) {
  const [slug,title,category,excerpt,cover,demo,src]=r; const time=`2026-10-0${Math.max(1,7-i)}T02:00:00.000Z`;
  const content=demo?`<p>${excerpt}</p><h2>Cùng học tập, cùng trưởng thành</h2><p>Nội dung bài viết được biên tập từ hoạt động thực tế của nhà trường và có thể cập nhật theo từng đợt thông tin.</p><p>Mỗi ngày đến trường là một cơ hội để học thêm điều mới, rèn luyện thói quen tốt và xây dựng tình bạn. Sự đồng hành của thầy cô, gia đình và tập thể là nền tảng để học sinh tự tin phát triển.</p>`:`<p>${excerpt}</p><p>Theo Báo Gia Lai, khóa đầu tiên có 160 học sinh nam, nữ, được tổ chức thành bốn lớp ở khối 6 và khối 10.</p><p>Nhà trường định hướng kết hợp học tập với rèn luyện nền nếp và kỹ năng sống, tạo môi trường phát triển toàn diện cho học sinh.</p><p>Bản tin tóm lược từ nguồn báo chí được liên kết bên dưới. Ảnh sự kiện sẽ được nhà trường cập nhật trong trang quản trị.</p>`;
- db.prepare('INSERT INTO posts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(`seed-${i}`,title,slug,excerpt,content,cover,category,'published',i===0?1:0,demo,'admin',time,time,demo?time:'2026-10-01T07:39:00.000Z',src,1);
+ db.prepare('INSERT INTO posts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(`seed-${i}`,title,slug,excerpt,content,cover,category,'published',i===0?1:0,demo,seedAuthorId,time,time,demo?time:'2026-10-01T07:39:00.000Z',src,1);
  }
 }
 // Public Facebook posts captured from the school's page and kept as editable content records.
@@ -77,9 +84,9 @@ const facebookSeeds = [
  ['fb-chia-tay','GIÂY PHÚT CHIA TAY – ĐONG ĐẦY NHỮNG KỶ NIỆM YÊU THƯƠNG','hoat-dong','Một ngày nhiều cảm xúc dưới mái trường Thiếu sinh quân. Những khoảnh khắc bên nhau trở thành ký ức đẹp trên hành trình trưởng thành.','/images/school-overview.jpg','https://www.facebook.com/profile.php?id=61595020737189'],
  ['fb-hoc-sinh-dtts','Học sinh DTTS tự hào khoác áo học viên thiếu sinh quân','hoat-dong','Câu chuyện về những học sinh dân tộc thiểu số tự tin hòa nhập, học tập và rèn luyện trong môi trường mới.','/images/school-ceremony.jpg','https://www.facebook.com/profile.php?id=61595020737189']
 ];
-if (db.prepare('SELECT id FROM users WHERE id=?').get('admin')) for (const [id,title,category,excerpt,cover,source] of facebookSeeds) {
+if (db.prepare('SELECT id FROM users WHERE id=?').get(seedAuthorId)) for (const [id,title,category,excerpt,cover,source] of facebookSeeds) {
  const t=new Date().toISOString(); const content=`<p>${excerpt}</p><p>Nội dung được biên tập lại từ bài đăng công khai trên Facebook của Phân hiệu 1 để hiển thị trong mục Tin tức và trang bài viết. Vui lòng mở nguồn gốc để xem đầy đủ hình ảnh và tương tác.</p>`;
- db.prepare('INSERT OR IGNORE INTO posts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(id,title,id,excerpt,content,cover,category,'published',0,0,'admin',t,t,t,source,1);
+ db.prepare('INSERT OR IGNORE INTO posts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(id,title,id,excerpt,content,cover,category,'published',0,0,seedAuthorId,t,t,t,source,1);
 }
 // Keep imported Facebook stories linked back to the school's official page.
 db.prepare("UPDATE posts SET source=? WHERE id LIKE 'fb-%' AND (source='' OR source NOT LIKE '%facebook.com%')").run('https://www.facebook.com/profile.php?id=61595020737189');
@@ -89,9 +96,9 @@ const officialStories = [
  ['khai-giang-khoa-hoc-dau-tien','Khai giảng năm học đầu tiên với 160 học sinh','giao-duc','Năm học 2026–2027, Phân hiệu đón 160 học sinh nam, nữ, tổ chức thành bốn lớp ở khối 6 và khối 10.','/images/school-students.jpg',schoolMedia.baogiaLaiArticle],
  ['xay-dung-nep-song-chinh-quy','Xây dựng nếp sống chính quy, an toàn và thân thiện','giao-duc','Phân hiệu tập trung ổn định tổ chức, duy trì nền nếp học tập và rèn luyện, đồng hành cùng học sinh trong môi trường giáo dục an toàn.','/images/school-overview.jpg',schoolMedia.vovArticle]
 ];
-if (db.prepare('SELECT id FROM users WHERE id=?').get('admin')) for (const [id,title,category,excerpt,cover,source] of officialStories) {
+if (db.prepare('SELECT id FROM users WHERE id=?').get(seedAuthorId)) for (const [id,title,category,excerpt,cover,source] of officialStories) {
  const t='2026-10-01T07:39:00.000Z'; const content=`<p>${excerpt}</p><p>Phân hiệu hướng đến mô hình trường học xanh, an toàn, kỷ cương, thông minh và hiện đại; kết hợp học tập văn hóa với rèn luyện nền nếp, kỹ năng sống và tinh thần trách nhiệm.</p><p>Thông tin được biên tập từ nguồn báo chí liên kết bên dưới.</p>`;
- db.prepare('INSERT OR IGNORE INTO posts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(id,title,id,excerpt,content,cover,category,'published',id==='bao-chi-thanh-lap-phan-hieu-1'?1:0,0,'admin',t,t,t,source,1);
+ db.prepare('INSERT OR IGNORE INTO posts VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(id,title,id,excerpt,content,cover,category,'published',id==='bao-chi-thanh-lap-phan-hieu-1'?1:0,0,seedAuthorId,t,t,t,source,1);
 }
 db.prepare("UPDATE posts SET cover=? WHERE id='seed-0'").run('/images/school-ceremony.jpg');
 db.prepare("UPDATE posts SET cover=? WHERE id='seed-1'").run('/images/school-students.jpg');
