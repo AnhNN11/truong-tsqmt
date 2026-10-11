@@ -1,0 +1,142 @@
+.header {
+  position: relative;
+  z-index: 20;
+  isolation: isolate;
+  color: #f7f5eb;
+  background: #133a2d;
+  border-top: 3px solid var(--gold);
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  inset: 0;
+  background: url('/images/dong-son-drum.svg') right max(-70px, calc((100vw - 1600px) / 2)) top -200px / 430px no-repeat;
+  opacity: .055;
+}
+
+.container {
+  width: calc(100% - 112px);
+  max-width: 1264px;
+  margin-inline: auto;
+}
+
+.masthead {
+  min-height: 108px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  padding-block: 18px;
+}
+
+.brand { display: flex; align-items: center; gap: 19px; min-width: 0; }
+.brand:hover { color: inherit; }
+
+.logo {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.identity { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.branch { font-size: 11px; font-weight: 600; letter-spacing: 2.2px; text-transform: uppercase; color: var(--gold); line-height: 1.4; }
+.schoolName { font-size: clamp(18px, 1.45vw, 23px); font-weight: 650; line-height: 1.45; text-transform: uppercase; text-wrap: balance; }
+.mobileTagline { display: none; }
+
+.motto { display: flex; flex-direction: column; gap: 7px; padding-left: 26px; border-left: 1px solid #dfc17f45; white-space: nowrap; }
+.motto > span:first-child { font-size: 12px; font-weight: 550; color: #ead5a5; }
+.motto > span:last-child { font-size: 11px; color: #b7c9bf; }
+
+.navigationWrap { border-top: 1px solid #ffffff16; border-bottom: 1px solid #dfc17f35; background: #0c2c22; }
+.navigationRow { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.navigation { display: flex; gap: 38px; align-items: stretch; }
+
+.navLink { display: flex; align-items: center; min-height: 58px; position: relative; font-size: 13px; font-weight: 550; white-space: nowrap; color: #d8e4dc; }
+.navLink:hover, .active { color: #f0d799; }
+.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--gold); }
+.actions { display: flex; align-items: center; gap: 14px; }
+
+.contactLink { display: flex; align-items: center; justify-content: center; gap: 18px; min-height: 38px; padding: 7px 15px; border: 1px solid #dfc17f50; border-radius: 3px; color: #edd8aa; font-size: 12px; font-weight: 550; white-space: nowrap; }
+.contactLink:hover { background: #dfc17f12; border-color: var(--gold); color: #fff0c7; }
+
+.iconButton { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; flex-shrink: 0; padding: 0; color: #e5eade; border: 1px solid #ffffff26; border-radius: 3px; background: transparent; }
+.iconButton:hover { color: #f0d799; background: #ffffff09; border-color: #dfc17f70; }
+.menuToggle { display: none; }
+.header a:focus-visible, .header button:focus-visible { outline: 2px solid #f0d799; outline-offset: 4px; }
+
+.searchContainer { position: relative; flex-shrink: 0; }
+.searchActive { border-color: var(--gold); color: var(--gold); }
+.searchPopover {
+  position: absolute;
+  top: calc(100% + 13px);
+  right: 0;
+  z-index: 1;
+  width: min(380px, calc(100vw - 32px));
+  padding: 18px 20px;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid #dde4de;
+  border-top: 2px solid var(--gold);
+  border-radius: 3px;
+  box-shadow: 0 12px 28px #0c2c2226;
+}
+.searchHeading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.searchHeading > label { margin: 0; color: var(--green); font-size: 14px; font-weight: 600; }
+.searchClose { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin-right: -5px; padding: 0; color: #78867c; background: transparent; border-radius: 3px; }
+.searchClose:hover { color: var(--green); background: #f0f4f1; }
+.searchField { display: flex; align-items: center; gap: 8px; padding: 4px; background: #fff; border: 1px solid #cdd8d0; border-radius: 3px; }
+.searchField:focus-within { border-color: var(--green); box-shadow: 0 0 0 2px #173e3010; }
+.searchField > input { flex: 1; width: 0; min-height: 36px; min-width: 0; border: 0; padding: 4px 8px; background: transparent; color: var(--ink); font-size: 14px; outline: none; box-shadow: none; }
+.searchField > button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; padding: 0; background: #173e30; color: #fff; border-radius: 2px; }
+.searchField > button:hover { background: #254c3b; }
+.searchPopover button:focus-visible, .searchPopover a:focus-visible { outline-color: var(--green); outline-offset: 3px; }
+.searchAll { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; color: #617268; font-size: 11px; }
+.searchAll:hover { color: var(--green); }
+
+@media (max-width: 1100px) {
+  .motto { display: none; }
+  .mobileTagline { display: block; color: #b7c9bf; font-size: 11px; }
+  .identity { gap: 4px; }
+  .schoolName { font-size: 22px; }
+  .navigation { gap: 27px; }
+  .navLink { font-size: 12px; }
+  .contactLink { font-size: 11px; padding-inline: 12px; gap: 12px; }
+}
+
+@media (max-width: 880px) {
+  .container { width: calc(100% - 64px); }
+  .masthead { gap: 22px; min-height: 110px; }
+  .schoolName { font-size: 20px; }
+  .menuToggle { display: inline-flex; width: 42px; height: 42px; }
+  .navigationWrap { display: none; }
+  .navigationOpen { display: block; }
+  .navigationRow { flex-direction: column; align-items: stretch; gap: 0; padding-block: 8px 20px; }
+  .navigation { flex-direction: column; gap: 0; }
+  .navLink { min-height: 48px; font-size: 14px; border-bottom: 1px solid #ffffff0d; }
+  .active::after { width: 22px; right: auto; height: 2px; }
+  .actions { position: relative; margin-top: 16px; gap: 12px; }
+  .contactLink { flex: 1; justify-content: space-between; min-height: 44px; font-size: 13px; }
+  .searchContainer { position: static; }
+  .searchContainer > .iconButton { width: 44px; height: 44px; }
+  .searchPopover { top: calc(100% + 10px); width: min(380px, 100%); }
+  .searchField > input { font-size: 16px; }
+  .searchField > button { width: 40px; height: 40px; }
+}
+
+@media (max-width: 540px) {
+  .container { width: calc(100% - 32px); }
+  .masthead { min-height: 104px; gap: 12px; padding-block: 16px; }
+  .brand { flex: 1; gap: 12px; }
+  .logo { width: 50px; height: 50px; }
+  .branch { font-size: 9px; letter-spacing: 1.7px; }
+  .schoolName { font-size: 13px; line-height: 1.6; text-wrap: pretty; }
+  .mobileTagline { display: none; }
+  .menuToggle { width: 38px; height: 38px; }
+  .searchPopover { width: 100%; padding: 16px; }
+  .header::before { background-position: right -190px top -160px; background-size: 340px; }
+}

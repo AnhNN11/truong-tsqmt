@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, HeartHandshake, Maximize2, Monitor, ShieldCheck, Star, UsersRound, X } from 'lucide-react';
 import styles from './school-life.module.css';
+import facultyStyles from './faculty-directory.module.css';
+import disciplineStyles from './school-discipline.module.css';
 import { faculties } from '@/lib/faculties';
-import { LandingArt } from '@/components/landing-art';
+import { HomeSectionGraphics } from './home-graphics';
 
 type Photo = { src: string; title: string; description: string };
 const learning: Photo[] = [
@@ -59,40 +61,49 @@ export function SchoolLife() {
   }
 
   return <div id="school-life" className={styles.schoolLife}>
-    <section className={styles.core} aria-labelledby="core-title">
-      <LandingArt kind="drum-seal" className={styles.coreArt} />
-      <div className={styles.inner}>
+    <section id="gia-tri-cot-loi" className={styles.core} aria-labelledby="core-title">
+      <HomeSectionGraphics scene="core" />
+      <div className={`${styles.inner} ${styles.coreLayout}`}>
         <div className={styles.coreHeading}>
           <div className={styles.kicker}><span>01</span> GIÁ TRỊ CỐT LÕI</div>
-          <h2 id="core-title">Hành trang cho<br />một tương lai <em>vững vàng.</em></h2>
+          <h2 id="core-title">Hành trang cho<br />một tương lai<br /><em>vững vàng.</em></h2>
           <p>Tri thức, bản lĩnh và tình yêu thương cùng các em viết nên hành trình trưởng thành.</p>
+          <Link href="/giao-duc" className={styles.coreLink}>Khám phá giáo dục & rèn luyện <ArrowRight size={18} /></Link>
         </div>
         <div className={styles.coreGrid}>{values.map(({ icon: Icon, title, text }, index) => <Link href="/giao-duc" className={styles.value} key={title}>
-          <div className={styles.valueTop}><Icon size={26} strokeWidth={1.5} /><span>0{index + 1}</span></div>
+          <div className={styles.valueTop}><Icon size={26} strokeWidth={1.5} aria-hidden="true" /><span>0{index + 1}</span></div>
           <h3>{title}</h3><p>{text}</p><span className={styles.valueLink}>Tìm hiểu thêm <ArrowRight size={15} /></span>
         </Link>)}</div>
       </div>
     </section>
 
-    <section id="cac-khoa" className="section faculties-section" aria-labelledby="faculties-title">
-      <LandingArt kind="academy-gate" className="faculties-section-art" />
-      <div className="container">
-        <div className="section-heading">
-          <div><span className="eyebrow"><span />BỐN KHOA ĐÀO TẠO</span><h2 id="faculties-title">Mỗi khoa mở một hướng đi.</h2></div>
-          <Link className="text-link" href="/giao-duc">Xem toàn bộ chương trình <ArrowRight size={17} /></Link>
+    <section id="cac-khoa" className={facultyStyles.section} aria-labelledby="faculties-title">
+      <HomeSectionGraphics scene="faculties" />
+      <div className={facultyStyles.inner}>
+        <div className={facultyStyles.heading}>
+          <div>
+            <span className={facultyStyles.eyebrow}>BỐN KHOA ĐÀO TẠO</span>
+            <h2 id="faculties-title">Mỗi khoa mở một hướng đi.</h2>
+          </div>
+          <Link className={facultyStyles.overview} href="/giao-duc">Xem toàn bộ chương trình <ArrowRight size={17} aria-hidden="true" /></Link>
         </div>
-        <div className="faculties-grid">
-          {faculties.map(({ slug, number, title, summary, icon: Icon }) => <Link className="faculty-card" href={`/giao-duc/${slug}`} key={slug}>
-            <div className="faculty-top"><Icon size={25} strokeWidth={1.5} /><span>{number}</span></div>
-            <h3>{title}</h3><p>{summary}</p>
-            <span className="faculty-card-link">Khám phá khoa <ArrowRight size={15} /></span>
-          </Link>)}
-        </div>
+        <ol className={facultyStyles.list}>
+          {faculties.map(({ slug, number, title, summary, icon: Icon }) => <li key={slug}>
+            <Link className={facultyStyles.card} href={`/giao-duc/${slug}`}>
+              <div className={facultyStyles.content}>
+                <span className={facultyStyles.mark}><Icon size={26} strokeWidth={1.5} aria-hidden="true" /><span>{number}</span></span>
+                <h3 className={facultyStyles.title}>{title}</h3>
+                <p className={facultyStyles.summary}>{summary}</p>
+                <span className={facultyStyles.action}>Khám phá khoa <ArrowRight size={17} aria-hidden="true" /></span>
+              </div>
+            </Link>
+          </li>)}
+        </ol>
       </div>
     </section>
 
     <section id="moi-truong-hoc-tap" className={styles.learning} aria-labelledby="learning-title">
-      <LandingArt kind="learning-books" className={styles.learningArt} />
+      <HomeSectionGraphics scene="learning" />
       <div className={`${styles.inner} ${styles.learningLayout}`}>
         <div className={styles.copy}>
           <div className={styles.kicker}><span>02</span> MÔI TRƯỜNG HỌC TẬP</div>
@@ -103,29 +114,35 @@ export function SchoolLife() {
             <li><HeartHandshake size={21} />Thầy cô tận tâm, bạn bè gắn kết</li>
             <li><Monitor size={21} />Khám phá kiến thức qua thực hành</li>
           </ul>
-          <Link href="/giao-duc" className={styles.cta}>Khám phá môi trường học tập <ArrowRight size={18} /></Link>
+          <Link href="/giao-duc" className={styles.cta}>Khám phá môi trường học tập <ArrowRight size={17} aria-hidden="true" /></Link>
         </div>
         <div className={styles.learningGallery}>{learning.map((photo, index) => photoButton(photo, index, index === 0 ? styles.learningLead : ''))}</div>
       </div>
     </section>
 
-    <section id="nen-nep" className={styles.discipline} aria-labelledby="discipline-title">
-      <LandingArt kind="compass-flag" className={styles.disciplineArt} />
-      <div className={`${styles.inner} ${styles.disciplineLayout}`}>
-        <div className={styles.disciplineGallery}>
-          <div className={styles.disciplineMosaic}>{discipline.map((photo, index) => photoButton(photo, index + 4, index === 0 ? styles.disciplineLead : index === 1 ? styles.drill : ''))}</div>
-        </div>
-        <div className={styles.copy}>
-          <div className={styles.kicker}><span>03</span> NỀN NẾP · TÁC PHONG</div>
-          <h2 id="discipline-title">Nền nếp tạo nên<br /><em>sự tự tin.</em></h2>
-          <p>Từ một trang sách, một nếp chăn đến từng động tác trên sân tập. Những việc nhỏ được làm tốt mỗi ngày là nền tảng để học viên tự lập và trưởng thành.</p>
-          <ul className={styles.points}>
-            <li><ShieldCheck size={21} />Tự giác trong học tập và sinh hoạt</li>
-            <li><Star size={21} />Ngăn nắp, chỉn chu từ những việc nhỏ</li>
-            <li><UsersRound size={21} />Rèn luyện cùng sự hướng dẫn tận tâm</li>
-          </ul>
-          <Link href="/giao-duc" className={styles.cta}>Tìm hiểu giáo dục & rèn luyện <ArrowRight size={18} /></Link>
-          <div className={styles.signature}>Mỗi ngày tiến bộ.<br /><span>Mỗi ngày trưởng thành.</span></div>
+    <section id="nen-nep" className={disciplineStyles.section} aria-labelledby="discipline-title">
+      <HomeSectionGraphics scene="discipline" />
+      <div className={disciplineStyles.inner}>
+        <div className={disciplineStyles.layout}>
+          <div className={disciplineStyles.copy}>
+            <div className={disciplineStyles.kicker}><span>03</span> NỀN NẾP · TÁC PHONG</div>
+            <h2 id="discipline-title">Nền nếp tạo nên<br /><em>sự tự tin.</em></h2>
+            <p className={disciplineStyles.intro}>Từ một trang sách, một nếp chăn đến từng động tác trên sân tập. Những việc nhỏ được làm tốt mỗi ngày là nền tảng để học viên tự lập và trưởng thành.</p>
+            <ul className={disciplineStyles.points}>
+              <li><ShieldCheck size={21} strokeWidth={1.5} aria-hidden="true" /><span>Tự giác trong học tập và sinh hoạt</span></li>
+              <li><Star size={21} strokeWidth={1.5} aria-hidden="true" /><span>Ngăn nắp, chỉn chu từ những việc nhỏ</span></li>
+              <li><UsersRound size={21} strokeWidth={1.5} aria-hidden="true" /><span>Rèn luyện cùng sự hướng dẫn tận tâm</span></li>
+            </ul>
+            <Link href="/giao-duc" className={styles.cta}>Tìm hiểu giáo dục & rèn luyện <ArrowRight size={17} aria-hidden="true" /></Link>
+            <p className={disciplineStyles.signature}><span>Mỗi ngày tiến bộ.</span>{' '}<span>Mỗi ngày trưởng thành.</span></p>
+          </div>
+          <div className={disciplineStyles.visual}>
+            <div className={disciplineStyles.gallery}>
+              {photoButton(discipline[0], 4, `${disciplineStyles.photo} ${disciplineStyles.study}`)}
+              {photoButton(discipline[1], 5, `${disciplineStyles.photo} ${disciplineStyles.drill}`)}
+              {photoButton(discipline[2], 6, `${disciplineStyles.photo} ${disciplineStyles.bed}`)}
+            </div>
+          </div>
         </div>
       </div>
     </section>

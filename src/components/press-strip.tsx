@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HomeSectionGraphics } from './home-graphics';
 
 const mentions = [
   { name: 'Quân khu 5 Online', logo: '/images/press/quankhu5-online.png', href: 'https://quankhu5.vn/' },
@@ -14,6 +15,7 @@ export function PressStrip() {
   const items = [...mentions, ...mentions, ...mentions];
   return (
     <section className="press-strip" aria-label="Báo chí viết về nhà trường">
+      <HomeSectionGraphics scene="press" />
       <div className="container press-strip-heading">
         <span className="eyebrow"><span />ĐƯỢC NHẮC ĐẾN TRÊN</span>
         <p>Báo chí viết về Phân hiệu 1</p>

@@ -1,34 +1,54 @@
 import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react';
 import { ContactForm } from '@/components/contact-form';
 import type { Settings } from '@/lib/types';
-import { LandingArt } from '@/components/landing-art';
+import styles from './contact-section.module.css';
+import { HomeSectionGraphics } from './home-graphics';
 
 export function ContactSection({ settings: s }: { settings: Settings }) {
+  const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(s.address);
+
   return (
-    <section id="lien-he" className="section contact-section">
-      <LandingArt kind="compass-flag" className="contact-section-art" />
-      <div className="container contact-grid">
-      <div>
-        <span className="eyebrow">THÔNG TIN LIÊN HỆ</span>
-        <div className="contact-identity" aria-hidden="true">
-          <img src="/images/school-logo.jpg" alt="" />
-          <div><span>PHÂN HIỆU 1</span><strong>THỐNG NHẤT · GIA LAI</strong></div>
+    <section id="lien-he" className={styles.section} aria-labelledby="contact-title">
+      <HomeSectionGraphics scene="contact" />
+      <div className={styles.inner}>
+        <div className={styles.heading}>
+          <div>
+            <div className={styles.kicker}><span>04</span> LIÊN HỆ NHÀ TRƯỜNG</div>
+            <h2 id="contact-title">Kết nối với nhà trường.</h2>
+          </div>
+          <p>Chúng tôi luôn sẵn sàng lắng nghe và đồng hành cùng gia đình.</p>
         </div>
-        <h2>{s.branch}<br />{s.schoolName}</h2>
-        <div className="contact-detail">
-          <MapPin />
-          <div><strong>Địa chỉ</strong><p>{s.address}</p></div>
+        <div className={styles.layout}>
+          <div className={styles.info}>
+            <div className={styles.identity}>
+              <img src="/images/school-logo.jpg" alt="" width={56} height={56} loading="lazy" />
+              <div><span>{s.branch}</span><h3>{s.schoolName}</h3></div>
+            </div>
+            <dl className={styles.details}>
+              <div>
+                <dt><MapPin size={19} strokeWidth={1.5} aria-hidden="true" />Địa chỉ</dt>
+                <dd>{s.address}</dd>
+              </div>
+              {s.phone && <div>
+                <dt><Phone size={19} strokeWidth={1.5} aria-hidden="true" />Điện thoại</dt>
+                <dd><a href={'tel:' + s.phone}>{s.phone}</a></dd>
+              </div>}
+              {s.email && <div>
+                <dt><Mail size={19} strokeWidth={1.5} aria-hidden="true" />Email</dt>
+                <dd><a href={'mailto:' + s.email}>{s.email}</a></dd>
+              </div>}
+            </dl>
+            {s.facebook && <a href={s.facebook} className={styles.link} target="_blank" rel="noreferrer">Facebook của Phân hiệu <ArrowUpRight size={17} aria-hidden="true" /></a>}
+            <div className={styles.map}>
+              <div className={styles.mapHeading}>
+                <h4>Vị trí nhà trường</h4>
+                <a href={mapUrl} className={styles.link} target="_blank" rel="noreferrer">Chỉ đường <ArrowUpRight size={16} aria-hidden="true" /></a>
+              </div>
+              <iframe title="Bản đồ vị trí Phân hiệu 1" src={'https://www.google.com/maps?q=' + encodeURIComponent(s.address) + '&output=embed'} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+            </div>
+          </div>
+          <ContactForm />
         </div>
-        {s.phone && <div className="contact-detail"><Phone /><div><strong>Điện thoại</strong><a href={'tel:' + s.phone}>{s.phone}</a></div></div>}
-        {s.email && <div className="contact-detail"><Mail /><div><strong>Email</strong><a href={'mailto:' + s.email}>{s.email}</a></div></div>}
-        <a href={s.facebook} className="button outline-button" target="_blank" rel="noreferrer">Facebook của Phân hiệu <ArrowUpRight size={18} /></a>
-        <div className="contact-map">
-          <div className="map-heading"><MapPin size={22} /><span>THỐNG NHẤT · GIA LAI</span></div>
-          <iframe title="Bản đồ vị trí Phân hiệu 1" src={'https://www.google.com/maps?q=' + encodeURIComponent(s.address) + '&output=embed'} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
-          <a href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(s.address)} target="_blank" rel="noreferrer">Xem khu vực trên bản đồ <ArrowUpRight size={15} /></a>
-        </div>
-      </div>
-      <ContactForm />
       </div>
     </section>
   );

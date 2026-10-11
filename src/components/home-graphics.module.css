@@ -1,0 +1,111 @@
+.surface {
+  --join-depth: 64px;
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: #fff;
+}
+/* Scenes overlap behind every section's content, with a solid curved join. */
+:global(#main-content) .surface :global(section) {
+  position: relative;
+  isolation: auto;
+  overflow: visible;
+  background: transparent;
+  border-top: 0;
+  border-bottom: 0;
+}
+:global(#main-content) .surface :global(section)::before,
+:global(#main-content) .surface :global(section)::after { content: none; }
+:global(#main-content) .surface :global(.news-section .section-heading) {
+  margin-left: 53%;
+  padding-right: 0;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+:global(#main-content) .surface :global(.news-stack) {
+  padding: 24px;
+  background: #fff;
+}
+.background {
+  position: absolute;
+  inset: calc(-1 * var(--join-depth)) 0 0;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+}
+.scene {
+  position: absolute;
+  inset: 0;
+  background-color: #faf8f2;
+  background-image: linear-gradient(#ffffff66, #ffffff66), var(--scene-art);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  clip-path: polygon(0 0, 10% 5px, 20% 16px, 30% 30px, 40% 44px, 50% 52px, 60% 50px, 70% 40px, 80% 25px, 90% 10px, 100% 0, 100% 100%, 0 100%);
+}
+/* The flag, support and cast shadows are part of the illustration itself.
+   These three scenes have no opacity, filter or whitening layer over the flag. */
+.news .scene, .faculties .scene, .contact .scene { background-image: var(--scene-art); }
+.news { inset-block-start: 0; --scene-art: url('/images/landing-art/news-integrated-v5.webp'); }
+.news .scene { clip-path: none; background-position: left center; }
+.press { --scene-art: url('/images/landing-art/press-monumental-v4.webp'); }
+.press .scene { background-position: center; }
+.story { --scene-art: url('/images/landing-art/story-monumental-v4.webp'); }
+.story .scene { background-position: right bottom; background-image: linear-gradient(#ffffffaa, #ffffffaa), var(--scene-art); }
+.core { --scene-art: url('/images/landing-art/heritage-monumental-v4.webp'); }
+.core .scene { background-image: linear-gradient(#ffffffaa, #ffffffaa), var(--scene-art); }
+.faculties { --scene-art: url('/images/landing-art/faculties-integrated-v5.webp'); }
+.faculties .scene { background-position: right top; }
+.learning { --scene-art: url('/images/landing-art/learning-monumental-v4.webp'); }
+.learning .scene { background-position: left bottom; background-image: linear-gradient(#ffffffaa, #ffffffaa), var(--scene-art); }
+.discipline { --scene-art: url('/images/landing-art/discipline-monumental-v4.webp'); }
+.discipline .scene { background-image: linear-gradient(#ffffff88, #ffffff88), var(--scene-art); }
+.contact { --scene-art: url('/images/landing-art/contact-integrated-v5.webp'); }
+.contact .scene { background-position: right top; background-size: cover; }
+
+@media (max-width: 1799px) {
+  /* A bounded scene height keeps the physical flag in frame on laptops. */
+  .faculties .scene { background-size: max(100%, 1800px) auto; }
+  .news .scene { background-position: left top; }
+  .faculties .scene, .contact .scene { background-position: right top; }
+  :global(#main-content) .surface :global(#tin-tuc) { padding-top: 130px; }
+  :global(#main-content) .surface :global(.home-news-grid) { padding-top: 48px; }
+  :global(#main-content) .surface :global(#cac-khoa),
+  :global(#main-content) .surface :global(#lien-he) { padding-top: 96px; }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .faculties .scene { background-size: 1100px auto; }
+  :global(#main-content) .surface :global(#tin-tuc) { padding-top: 100px; }
+}
+@media (max-width: 1100px) {
+  /* The portrait artwork ends in ivory stone, which continues through the tall form. */
+  .contact { --scene-art: url('/images/landing-art/contact-mobile-v5.webp'); }
+  .contact .scene { background-size: 100% auto; background-position: right top; background-color: #f3ebdf; }
+  :global(#main-content) .surface :global(#lien-he) { padding-top: clamp(220px, 61vw, 680px); }
+}
+@media (max-width: 760px) {
+  /* The portrait arrangement keeps the whole mounted flag above stacked content. */
+  .news { --scene-art: url('/images/landing-art/news-mobile-v5.webp'); }
+  .faculties { --scene-art: url('/images/landing-art/faculties-mobile-v5.webp'); }
+  .contact { --scene-art: url('/images/landing-art/contact-mobile-v5.webp'); }
+  .news .scene, .faculties .scene, .contact .scene { background-size: 100% auto; background-position: center top; }
+  :global(#main-content) .surface :global(#tin-tuc),
+  :global(#main-content) .surface :global(#cac-khoa),
+  :global(#main-content) .surface :global(#lien-he) { padding-top: clamp(220px, 61vw, 680px); }
+  :global(#main-content) .surface :global(.news-section .section-heading) { margin-left: 0; }
+  :global(#main-content) .surface :global(.home-news-grid) { padding-top: 0; }
+}
+@media (max-width: 760px) {
+  .surface { --join-depth: 40px; }
+  .scene {
+    background-size: auto 560px;
+    background-position: center bottom;
+    clip-path: polygon(0 0, 10% 3px, 20% 9px, 30% 17px, 40% 25px, 50% 30px, 60% 29px, 70% 23px, 80% 14px, 90% 6px, 100% 0, 100% 100%, 0 100%);
+  }
+  :global(#main-content) .surface :global(.news-stack) { padding: 20px; }
+  .press .scene { background-position: 35% bottom; }
+  .story .scene { background-position: 20% bottom; }
+  .core .scene { background-position: 52% bottom; }
+  .learning .scene { background-position: 15% bottom; }
+  .discipline .scene { background-position: 50% bottom; }
+}

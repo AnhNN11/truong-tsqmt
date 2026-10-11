@@ -1,0 +1,20 @@
+.scrollList {
+  height: 0;
+  min-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+
+.scrollList::-webkit-scrollbar { display: none; }
+
+.scrollList :global(.compact-post) { flex: 0 0 auto; }
+
+.scrollList:focus-visible {
+  outline: 2px solid #8c6a30;
+  outline-offset: 4px;
+}
+
+@media (max-width: 720px) {
+  .scrollList { height: auto; min-height: 0; max-height: 460px; }
+}
