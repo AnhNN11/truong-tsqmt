@@ -98,3 +98,13 @@
 .copy h2 em,.discipline .copy h2 em,.signature,.discipline .copy .kicker span,.discipline .points svg{color:#8c6a30}
 .discipline .points{border-color:#e4e8e0}
 .discipline .points li{color:#42604e}
+
+@media (max-width: 760px) {
+  .learning, .core { padding-block: 48px; }
+  .coreHeading h2, .copy h2 { font-size: clamp(28px, 7.5vw, 34px); }
+  .coreHeading p, .copy > p, .value p { font-size: 14px; line-height: 1.8; }
+  .points li { font-size: 13px; }
+  .coreLink, .cta { min-height: 44px; }
+  .learningGallery .photo { clip-path: none; }
+  .caption { font-size: 11px; }
+}

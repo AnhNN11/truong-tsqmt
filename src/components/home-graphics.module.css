@@ -77,35 +77,37 @@
   .faculties .scene { background-size: 1100px auto; }
   :global(#main-content) .surface :global(#tin-tuc) { padding-top: 100px; }
 }
-@media (max-width: 1100px) {
-  /* The portrait artwork ends in ivory stone, which continues through the tall form. */
-  .contact { --scene-art: url('/images/landing-art/contact-mobile-v5.webp'); }
-  .contact .scene { background-size: 100% auto; background-position: right top; background-color: #f3ebdf; }
-  :global(#main-content) .surface :global(#lien-he) { padding-top: clamp(220px, 61vw, 680px); }
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .contact .scene { background-size: cover; }
+  :global(#main-content) .surface :global(#lien-he) { padding-top: 72px; }
 }
-@media (max-width: 760px) {
-  /* The portrait arrangement keeps the whole mounted flag above stacked content. */
+@media (max-width: 900px) {
+  .surface { --join-depth: 20px; }
+  .scene {
+    background-size: auto 420px;
+    background-position: center bottom;
+    clip-path: polygon(0 0, 25% 9px, 50% 16px, 75% 9px, 100% 0, 100% 100%, 0 100%);
+  }
+  /* Full-width portrait scenes; content occupies their quiet left-hand area. */
   .news { --scene-art: url('/images/landing-art/news-mobile-v5.webp'); }
   .faculties { --scene-art: url('/images/landing-art/faculties-mobile-v5.webp'); }
   .contact { --scene-art: url('/images/landing-art/contact-mobile-v5.webp'); }
-  .news .scene, .faculties .scene, .contact .scene { background-size: 100% auto; background-position: center top; }
+  .news .scene, .faculties .scene, .contact .scene {
+    background-size: 100% auto;
+    background-position: right top;
+    background-color: #faf8f2;
+  }
   :global(#main-content) .surface :global(#tin-tuc),
   :global(#main-content) .surface :global(#cac-khoa),
-  :global(#main-content) .surface :global(#lien-he) { padding-top: clamp(220px, 61vw, 680px); }
-  :global(#main-content) .surface :global(.news-section .section-heading) { margin-left: 0; }
-  :global(#main-content) .surface :global(.home-news-grid) { padding-top: 0; }
-}
-@media (max-width: 760px) {
-  .surface { --join-depth: 40px; }
-  .scene {
-    background-size: auto 560px;
-    background-position: center bottom;
-    clip-path: polygon(0 0, 10% 3px, 20% 9px, 30% 17px, 40% 25px, 50% 30px, 60% 29px, 70% 23px, 80% 14px, 90% 6px, 100% 0, 100% 100%, 0 100%);
+  :global(#main-content) .surface :global(#lien-he) { padding-top: 48px; padding-bottom: 48px; }
+  :global(#main-content) .surface :global(.news-section .section-heading) {
+    margin-left: 0; padding-right: 45%; gap: 12px; min-height: 142px;
+    flex-direction: column; align-items: flex-start; justify-content: center; margin-bottom: 24px;
   }
-  :global(#main-content) .surface :global(.news-stack) { padding: 20px; }
-  .press .scene { background-position: 35% bottom; }
+  :global(#main-content) .surface :global(.news-section .section-heading .text-link) { margin-top: 0; }
+  :global(#main-content) .surface :global(.home-news-grid) { padding-top: 0; }
+  :global(#main-content) .surface :global(.news-stack) { padding: 18px; }
   .story .scene { background-position: 20% bottom; }
-  .core .scene { background-position: 52% bottom; }
   .learning .scene { background-position: 15% bottom; }
-  .discipline .scene { background-position: 50% bottom; }
 }

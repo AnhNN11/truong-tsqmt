@@ -1,0 +1,171 @@
+{
+  "scope": "Server actions with isolated real SQLite; mocked Next request context and SMTP, not browser E2E",
+  "passed": 41,
+  "failed": [],
+  "results": [
+    {
+      "name": "Anonymous admin access rejected",
+      "pass": true
+    },
+    {
+      "name": "Wrong password rejected",
+      "pass": true
+    },
+    {
+      "name": "Valid credentials open secure admin session without SMTP or OTP",
+      "pass": true
+    },
+    {
+      "name": "Logout invalidates session",
+      "pass": true
+    },
+    {
+      "name": "OTP challenge alone cannot log in",
+      "pass": true
+    },
+    {
+      "name": "Login rate limit rejects repeated passwords",
+      "pass": true
+    },
+    {
+      "name": "Admin creates editor",
+      "pass": true
+    },
+    {
+      "name": "Duplicate user email rejected",
+      "pass": true
+    },
+    {
+      "name": "Short user password rejected",
+      "pass": true
+    },
+    {
+      "name": "Category creation",
+      "pass": true
+    },
+    {
+      "name": "Create draft post",
+      "pass": true
+    },
+    {
+      "name": "HTML sanitization",
+      "pass": true
+    },
+    {
+      "name": "Duplicate slug rejected",
+      "pass": true
+    },
+    {
+      "name": "Edit and version history",
+      "pass": true
+    },
+    {
+      "name": "Stale version rejected",
+      "pass": true
+    },
+    {
+      "name": "Publish post",
+      "pass": true
+    },
+    {
+      "name": "Trash and restore post",
+      "pass": true
+    },
+    {
+      "name": "Used category cannot be deleted",
+      "pass": true
+    },
+    {
+      "name": "Invalid settings rejected",
+      "pass": true
+    },
+    {
+      "name": "Settings save",
+      "pass": true
+    },
+    {
+      "name": "Hero slide save",
+      "pass": true
+    },
+    {
+      "name": "Inactive hero remains manageable and can be re-enabled",
+      "pass": true
+    },
+    {
+      "name": "Invalid media rejected",
+      "pass": true
+    },
+    {
+      "name": "PNG upload persists file and record",
+      "pass": true
+    },
+    {
+      "name": "Invalid contact rejected",
+      "pass": true
+    },
+    {
+      "name": "Honeypot stores no message",
+      "pass": true
+    },
+    {
+      "name": "Contact stores message",
+      "pass": true
+    },
+    {
+      "name": "Contact rate limit",
+      "pass": true
+    },
+    {
+      "name": "Mark message handled",
+      "pass": true
+    },
+    {
+      "name": "Unused category deletion",
+      "pass": true
+    },
+    {
+      "name": "Oversized upload rejected",
+      "pass": true
+    },
+    {
+      "name": "Wrong current password cannot change password",
+      "pass": true
+    },
+    {
+      "name": "Short replacement password rejected",
+      "pass": true
+    },
+    {
+      "name": "Password change revokes previous sessions and retains current login",
+      "pass": true
+    },
+    {
+      "name": "Author cannot edit others posts",
+      "pass": true
+    },
+    {
+      "name": "Author cannot publish",
+      "pass": true
+    },
+    {
+      "name": "Author cannot manage categories",
+      "pass": true
+    },
+    {
+      "name": "Author cannot change settings",
+      "pass": true
+    },
+    {
+      "name": "Author cannot create users",
+      "pass": true
+    },
+    {
+      "name": "Author cannot handle messages",
+      "pass": true
+    },
+    {
+      "name": "Expired sessions rejected",
+      "pass": true
+    }
+  ]
+}

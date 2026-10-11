@@ -1,0 +1,91 @@
+// Isolated server-action audit. Never opens or modifies the production database.
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const assert = require('node:assert/strict');
+const ts = require('typescript');
+const root = path.resolve(__dirname, '..');
+const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'tsqmt-audit-'));
+process.chdir(sandbox);
+process.env.DATABASE_PATH = path.join(sandbox, 'audit.db');
+process.env.ADMIN_EMAIL = 'audit-admin@example.test';
+process.env.ADMIN_PASSWORD = 'Audit-only-password-12345';
+process.env.COOKIE_SECURE = 'true';
+delete process.env.VERCEL;
+const jar = new Map(); let lastCookie; let sentMail; let mailFails = false;
+const cache = new Map();
+function load(file) {
+  if (cache.has(file)) return cache.get(file).exports;
+  const module = {exports:{}}; cache.set(file,module);
+  const compiled = ts.transpileModule(fs.readFileSync(file,'utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;
+  function req(name) {
+    if(name==='server-only') return {};
+    if(name==='next/cache') return {revalidatePath(){}};
+    if(name==='next/navigation') return {redirect(url){throw new Error('REDIRECT:'+url)}};
+    if(name==='next/headers') return {cookies:async()=>({get:k=>jar.has(k)?{value:jar.get(k)}:undefined,set:(k,v,o)=>{jar.set(k,v);lastCookie=o},delete:k=>jar.delete(k)})};
+    if(name==='./mailer') return {sendLoginOtp:async(to,code)=>{if(mailFails)throw new Error('SMTP missing');sentMail={to,code}}};
+    if(name.startsWith('@/')) return load(path.join(root,'src',name.slice(2)+'.ts'));
+    if(name.startsWith('.')) return load(path.resolve(path.dirname(file),name+'.ts'));
+    return require(name);
+  }
+  new Function('require','module','exports',compiled)(req,module,module.exports); return module.exports;
+}
+const a=load(path.join(root,'src/lib/actions.ts'));
+const auth=load(path.join(root,'src/lib/auth.ts'));
+const data=load(path.join(root,'src/lib/db.ts'));
+const db=data.db; const results=[];
+const form=obj=>{const f=new FormData();for(const [k,v] of Object.entries(obj))f.set(k,v);return f};
+async function test(name,fn){try{await fn();results.push({name,pass:true})}catch(e){results.push({name,pass:false,error:e.message})}}
+(async()=>{
+ await test('Anonymous admin access rejected',async()=>assert.rejects(auth.requireUser(),/REDIRECT/));
+ await test('Wrong password rejected',async()=>assert.match((await a.login({},form({email:process.env.ADMIN_EMAIL,password:'wrong'}))).error,/không đúng/));
+ await test('Valid credentials open secure admin session without SMTP or OTP',async()=>{mailFails=true;await assert.rejects(a.login({},form({email:process.env.ADMIN_EMAIL,password:process.env.ADMIN_PASSWORD})),/REDIRECT:/);assert.equal((await auth.currentUser()).role,'admin');assert.equal(lastCookie.secure,true);assert.equal(lastCookie.httpOnly,true);assert.equal(sentMail,undefined);assert.equal(db.prepare('select count(*) as n from login_otp_challenges').get().n,0)});
+ await test('Logout invalidates session',async()=>{await assert.rejects(a.logout(),/REDIRECT:/);assert.equal(await auth.currentUser(),null);assert.equal(db.prepare('select count(*) as n from sessions').get().n,0)});
+ await test('OTP challenge alone cannot log in',async()=>{assert.ok((await a.login({},form({challengeId:'old-challenge',otp:'123456'}))).error);assert.equal(await auth.currentUser(),null)});
+ await test('Login rate limit rejects repeated passwords',async()=>{for(let i=0;i<8;i++)await a.login({},form({email:process.env.ADMIN_EMAIL,password:'wrong'}));assert.match((await a.login({},form({email:process.env.ADMIN_EMAIL,password:process.env.ADMIN_PASSWORD}))).error,/Quá nhiều/);db.prepare('delete from rate_limits').run()});
+ await assert.rejects(a.login({},form({email:process.env.ADMIN_EMAIL,password:process.env.ADMIN_PASSWORD})),/REDIRECT:/);
+ await test('Admin creates editor',async()=>assert.equal((await a.createUser(form({name:'Audit Editor',email:'editor@example.test',password:'Audit-editor-password-123',role:'editor'}))).success,true));
+ await test('Duplicate user email rejected',async()=>assert.ok((await a.createUser(form({name:'Audit Editor',email:'editor@example.test',password:'Audit-editor-password-123',role:'editor'}))).error));
+ await test('Short user password rejected',async()=>assert.ok((await a.createUser(form({name:'Audit Author',email:'author@example.test',password:'short',role:'author'}))).error));
+ await a.createUser(form({name:'Audit Author',email:'author@example.test',password:'Audit-author-password-123',role:'author'}));
+ await test('Category creation',async()=>assert.equal((await a.addCategory(form({name:'Audit Category'}))).success,true));
+ const category=db.prepare('select id from categories where slug=?').get('audit-category').id;
+ const post={title:'Audit article title',slug:'audit-article',excerpt:'Audit excerpt',content:'<p>Safe text</p><script>alert(1)</script><img src="/images/campus.webp" onerror="alert(2)">',cover:'/images/campus.webp',category,status:'draft',source:''};let id;
+ await test('Create draft post',async()=>{const r=await a.savePost(form(post));assert.equal(r.success,true);id=r.id});
+ await test('HTML sanitization',async()=>assert.doesNotMatch(data.getPost(id).content,/script|onerror/));
+ await test('Duplicate slug rejected',async()=>assert.ok((await a.savePost(form(post))).error));
+ await test('Edit and version history',async()=>{assert.equal((await a.savePost(form({...post,id,version:'1',title:'Audit updated article'}))).success,true);assert.equal(data.getPost(id).version,2);assert.equal(db.prepare('select count(*) as n from revisions where post_id=?').get(id).n,1)});
+ await test('Stale version rejected',async()=>assert.ok((await a.savePost(form({...post,id,version:'1'}))).error));
+ await test('Publish post',async()=>{await a.changePostStatus(id,'published');assert.equal(data.getPost(id).status,'published')});
+ await test('Trash and restore post',async()=>{await a.changePostStatus(id,'trash');assert.equal(data.getPost(id).status,'trash');await a.changePostStatus(id,'draft');assert.equal(data.getPost(id).status,'draft')});
+ await test('Used category cannot be deleted',async()=>assert.ok((await a.deleteCategory(category)).error));
+ await test('Invalid settings rejected',async()=>assert.ok((await a.saveSettings(form({schoolName:''}))).error));
+ await test('Settings save',async()=>{assert.equal((await a.saveSettings(form({phone:'0123456789'}))).success,true);assert.equal(data.getSettings().phone,'0123456789')});
+ await test('Hero slide save',async()=>assert.equal((await a.saveHeroSlide(form({id:'audit',eyebrow:'Audit',title:'Audit slide',description:'Audit',image:'/images/campus.webp',source:'',order:'9',active:'on'}))).success,true));
+ await test('Inactive hero remains manageable and can be re-enabled',async()=>{const slide={id:'audit',eyebrow:'Audit',title:'Audit slide',description:'Audit',image:'/images/campus.webp',source:'',order:'9'};await a.saveHeroSlide(form(slide));assert.ok(!data.getHeroSlides().some(s=>s.id==='audit'));assert.ok(data.getHeroSlides(true).some(s=>s.id==='audit'&&s.active===0));await a.saveHeroSlide(form({...slide,active:'on'}));assert.ok(data.getHeroSlides().some(s=>s.id==='audit'))});
+ await test('Invalid media rejected',async()=>assert.ok((await a.uploadMedia(form({file:new File(['bad'],'bad.png',{type:'image/png'})}))).error));
+ await test('PNG upload persists file and record',async()=>{const bytes=fs.readFileSync(path.join(root,'public/images/learning-classroom-03.png'));const r=await a.uploadMedia(form({file:new File([bytes],'audit.png',{type:'image/png'})}));assert.equal(r.success,true);assert.ok(fs.existsSync(path.join(sandbox,'.data/uploads',r.url.split('/').pop())))});
+ await test('Invalid contact rejected',async()=>assert.ok((await a.sendContact({},form({name:'A',email:'bad',message:'x'}))).error));
+ await test('Honeypot stores no message',async()=>{await a.sendContact({},form({website:'bot'}));assert.equal(db.prepare('select count(*) as n from messages').get().n,0)});
+ const contact={name:'Audit Visitor',email:'visitor@example.test',phone:'',message:'Isolated audit contact message'};
+ await test('Contact stores message',async()=>assert.equal((await a.sendContact({},form(contact))).success,true));
+ await test('Contact rate limit',async()=>{await a.sendContact({},form(contact));await a.sendContact({},form(contact));assert.ok((await a.sendContact({},form(contact))).error)});
+ await test('Mark message handled',async()=>{const m=db.prepare('select id from messages limit 1').get();await a.handleMessage(m.id);assert.equal(db.prepare('select handled from messages where id=?').get(m.id).handled,1)});
+ await test('Unused category deletion',async()=>{await a.addCategory(form({name:'Disposable empty category'}));const c=db.prepare('select id from categories where slug=?').get('disposable-empty-category');assert.equal((await a.deleteCategory(c.id)).success,true);assert.equal(db.prepare('select id from categories where id=?').get(c.id),undefined)});
+ await test('Oversized upload rejected',async()=>assert.ok((await a.uploadMedia(form({file:new File([Buffer.alloc(11*1024*1024)],'large.png',{type:'image/png'})}))).error));
+ await test('Wrong current password cannot change password',async()=>assert.ok((await a.changePassword(form({currentPassword:'wrong',password:'Changed-audit-password-123'}))).error));
+ await test('Short replacement password rejected',async()=>assert.ok((await a.changePassword(form({currentPassword:process.env.ADMIN_PASSWORD,password:'short'}))).error));
+ await test('Password change revokes previous sessions and retains current login',async()=>{await auth.startSession('admin');const before=db.prepare('select token from sessions where user_id=?').all('admin').map(r=>r.token);assert.equal((await a.changePassword(form({currentPassword:process.env.ADMIN_PASSWORD,password:'Changed-audit-password-123'}))).success,true);assert.equal(db.prepare('select count(*) as n from sessions where user_id=?').get('admin').n,1);assert.equal((await auth.currentUser()).id,'admin');assert.ok(db.prepare('select token from sessions where user_id=?').all('admin').every(r=>!before.includes(r.token)));assert.ok(auth.verifyPassword('Changed-audit-password-123',db.prepare('select password from users where id=?').get('admin').password))});
+ const author=db.prepare('select id from users where email=?').get('author@example.test').id;
+ await auth.startSession(author);
+ await test('Author cannot edit others posts',async()=>assert.ok((await a.savePost(form({...post,id,version:String(data.getPost(id).version)}))).error));
+ await test('Author cannot publish',async()=>assert.ok((await a.savePost(form({...post,slug:'author-post',status:'published'}))).error));
+ await test('Author cannot manage categories',async()=>assert.ok((await a.addCategory(form({name:'Denied Category'}))).error));
+ await test('Author cannot change settings',async()=>assert.rejects(a.saveSettings(form({phone:'x'})),/quản trị viên/));
+ await test('Author cannot create users',async()=>assert.rejects(a.createUser(form({})),/quản trị viên/));
+ await test('Author cannot handle messages',async()=>assert.rejects(a.handleMessage('x'),/Không có quyền/));
+ await test('Expired sessions rejected',async()=>{db.prepare('update sessions set expires=0').run();assert.equal(await auth.currentUser(),null)});
+
+ const report={scope:'Server actions with isolated real SQLite; mocked Next request context and SMTP, not browser E2E',passed:results.filter(r=>r.pass).length,failed:results.filter(r=>!r.pass),results};
+ fs.mkdirSync(path.join(root,'docs/audit'),{recursive:true});fs.writeFileSync(path.join(root,'docs/audit/actions-results.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));db.close();process.exitCode=report.failed.length?1:0;
+})().catch(e=>{console.error(e);process.exitCode=1});

@@ -140,3 +140,9 @@
   .searchPopover { width: 100%; padding: 16px; }
   .header::before { background-position: right -190px top -160px; background-size: 340px; }
 }
+
+@media (max-width: 540px) {
+  .masthead { min-height: 88px; padding-block: 12px; }
+  .menuToggle { width: 44px; height: 44px; }
+  .searchClose { width: 44px; height: 44px; }
+}

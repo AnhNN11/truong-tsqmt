@@ -120,5 +120,6 @@ export function getPublicPost(slug:string) { const row=db.prepare("SELECT p.*,u.
 export function getFacebookPosts() { return db.prepare("SELECT p.*,u.name AS author_name FROM posts p JOIN users u ON u.id=p.author_id WHERE p.status='published' AND p.id LIKE 'fb-%' ORDER BY p.published_at DESC").all().map(r=>({...r})) as Post[]; }
 export function getUsers() { return db.prepare('SELECT id,name,email,role FROM users ORDER BY name').all().map(r=>({...r})) as User[]; }
 export function getMedia() { return db.prepare('SELECT * FROM media ORDER BY created_at DESC').all().map(r=>({...r})) as Media[]; }
-export function getHeroSlides() { return db.prepare('SELECT * FROM hero_slides WHERE active=1 ORDER BY order_index,id').all().map(r=>({...r})) as HeroSlide[]; }
+export function getHeroSlides(includeInactive = false) { return db.prepare('SELECT * FROM hero_slides' + (includeInactive ? '' : ' WHERE active=1') + ' ORDER BY order_index,id').all().map(r=>({...r})) as HeroSlide[]; }
 export function audit(actor:string,action:string,entity:string) {db.prepare('INSERT INTO audit(actor,action,entity) VALUES(?,?,?)').run(actor,action,entity);}
+

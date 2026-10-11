@@ -18,3 +18,7 @@
 @media (max-width: 720px) {
   .scrollList { height: auto; min-height: 0; max-height: 460px; }
 }
+
+@media (max-width: 900px) {
+  .scrollList { height: auto; min-height: 0; max-height: 460px; }
+}

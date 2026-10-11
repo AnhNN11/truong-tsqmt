@@ -430,3 +430,16 @@
   .formFooter { flex-direction: column; align-items: flex-start; gap: 15px; }
   .formFooter small { max-width: none; }
 }
+
+@media (max-width: 760px) {
+  .heading { min-height: 142px; padding-right: 45%; gap: 12px; }
+  .heading h2 { font-size: clamp(26px, 6.6vw, 32px); }
+  .heading > p { font-size: 14px; }
+  .layout { gap: 20px; }
+  .control { font-size: 16px; min-width: 0; }
+  .submit { min-height: 44px; }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .heading { grid-template-columns: minmax(0, 1fr); max-width: none; padding-right: 45%; }
+}
